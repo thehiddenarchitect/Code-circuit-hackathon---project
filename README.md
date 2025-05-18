@@ -22,7 +22,7 @@ NeuroVerse is an AI-powered learning platform built for the Code Circuit Hackath
 - **Styling**: Tailwind CSS
 - **Visualizations**: Three.js (3D concept map), Vanta.js (animated background)
 - **Video**: YouTube Iframe API
-- **Fonts**: Rajdhani (Google Fonts)
+- **Fonts**: (Google Fonts)
 - **CDNs**: jsDelivr, Cloudflare
 
 ## ⚙️ Setup
