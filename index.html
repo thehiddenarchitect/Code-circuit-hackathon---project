@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroVerse | Advanced Cognitive Learning Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/konva@8.3.2/konva.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@0.0.3/dist/face-landmarks-detection.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/deepspeech@0.10.0/dist/deepspeech.min.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --neon-blue: #3b82f6;
+            --neon-purple: #8b5cf6;
+            --neon-pink: #ec4899;
+            --neon-cyan: #06b6d4;
+            --dark-space: #0f172a;
+            --darker-space: #020617;
+            --light-bg: #f1f5f9;
+            --light-text: #1e293b;
+            --light-border: rgba(100, 116, 139, 0.3);
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--dark-space);
+            color: white;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body.light-theme {
+            background-color: var(--light-bg);
+            color: var(--light-text);
+        }
+        
+        .light-theme .holographic-border {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--light-border);
+        }
+        
+        .light-theme .bg-gray-900 {
+            background-color: #e2e8f0;
+        }
+        
+        .light-theme .bg-gray-800 {
+            background-color: #f1f5f9;
+        }
+        
+        .light-theme .text-gray-300 {
+            color: #475569;
+        }
+        
+        .light-theme .text-gray-400 {
+            color: #64748b;
+        }
+        
+        .light-theme .text-blue-300 {
+            color: #2563eb;
+        }
+        
+        .light-theme .bg-blue-600 {
+            background-color: #2563eb;
+        }
+        
+        .light-theme .bg-purple-600 {
+            background-color: #7c3aed;
+        }
+        
+        .light-theme .bg-pink-600 {
+            background-color: #db2777;
+        }
+        
+        .light-theme .bg-gray-700 {
+            background-color: #e5e7eb;
+        }
+        
+        .light-theme .border-gray-700 {
+            border-color: #e5e7eb;
+        }
+        
+        .holographic-border {
+            position: relative;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(10px);
+        }
+        
+        .holographic-border::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 0.75rem;
+            padding: 2px;
+            background: linear-gradient(135deg, 
+                rgba(59, 130, 246, 0.8), 
+                rgba(139, 92, 246, 0.6), 
+                rgba(236, 72, 153, 0.4));
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 5px rgba(59, 130, 246, 0.7),
+                         0 0 10px rgba(139, 92, 246, 0.5);
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+        }
+        
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .glow {
+            filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.7));
+        }
+        
+        .scanline {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scanline::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to bottom, 
+                transparent, 
+                rgba(59, 130, 246, 0.5), 
+                transparent);
+            animation: scan 8s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        
+        .neon-button {
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        .neon-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+        }
+        
+        .concept-node {
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+        }
+        
+        .concept-node:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 12px rgba(236, 72, 153, 0.7));
+        }
+        
+        .avatar-pulse {
+            animation: avatarPulse 3s infinite;
+        }
+        
+        @keyframes avatarPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .cognitive-load-bar {
+            background: linear-gradient(90deg, 
+                #3b82f6, 
+                #8b5cf6, 
+                #ec4899);
+            height: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .hologram-effect {
+            background: rgba(59, 130, 246, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.3),
+                        0 0 20px rgba(59, 130, 246, 0.2);
+        }
+        
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        
+        .quantum-pulse {
+            animation: quantumPulse 3s infinite alternate;
+        }
+        
+        @keyframes quantumPulse {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        
+        .eye-tracking-marker {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: rgba(255, 0, 0, 0.7);
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .chat-container {
+            max-height: 200px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #3b82f6 #0f172a;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background-color: #3b82f6;
+            border-radius: 3px;
+        }
+
+        .progress-circle {
+            transform: rotate(-90deg);
+        }
+
+        .progress-circle-bg {
+            fill: none;
+            stroke: #1e293b;
+            stroke-width: 8;
+        }
+
+        .progress-circle-fill {
+            fill: none;
+            stroke: #3b82f6;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Dynamic Background -->
+    <div id="vanta-bg" class="fixed inset-0 -z-10"></div>
+    
+    <!-- Eye Tracking Marker -->
+    <div id="eyeTrackingMarker" class="eye-tracking-marker" style="display: none;"></div>
+    
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center glow">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-bold neon-text">NeuroVerse</h1>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- Theme Toggle -->
+                <button id="themeToggleBtn" class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-blue-400">
+                    <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </button>
+
+                <div class="relative group">
+                    <button id="userMenuBtn" class="px-4 py-2 rounded-md bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium neon-button">
+                        <span class="flex items-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <span>Aditya raj singh</span>
+                        </span>
+                    </button>
+                    <div id="userMenu" class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-gray-800 border border-gray-700 z-10 hidden">
+                        <div class="py-1">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Profile</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Settings</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Sign out</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="settingsBtn" class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-blue-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </button>
+                
+                <!-- Quantum Computing Indicator -->
+                <div class="relative group">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center quantum-pulse">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div class="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-gray-800 border border-gray-700 z-10 hidden group-hover:block p-3">
+                        <p class="text-sm text-gray-300">Quantum optimization active: Analyzing learning patterns with 12-qubit simulation</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Panel - Video Player & Cognitive Tools -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- AI Video Player -->
+                <div class="holographic-border rounded-xl overflow-hidden">
+                    
+                        <!-- YouTube Video Player -->
+                        <div class="relative pt-[56.25%] bg-black">
+                            <iframe id="neuroVideo" class="absolute top-0 left-0 w-full h-full" 
+                                    src="https://www.youtube.com/embed/JhHMJCUmq28?enablejsapi=1" 
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+
+                        <!-- Cognitive Load Visualizer -->
+                        <div class="absolute bottom-4 left-4 right-4 bg-gray-900 bg-opacity-70 rounded-lg p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-blue-400">Cognitive Load</span>
+                                <span id="cognitiveLoadText" class="text-xs text-gray-400">78% Focus</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-1.5">
+                                <div id="cognitiveLoadBar" class="cognitive-load-bar h-1.5 rounded-full" style="width: 78%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Webcam Feed Indicator -->
+                        <div id="webcamContainer" class="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-blue-400 overflow-hidden bg-gray-900 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        
+                        <!-- AI Assistant Indicator -->
+                        <div class="absolute bottom-4 right-4 flex items-center space-x-2">
+                            <div class="relative">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </div>
+                                <div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-green-500 border border-gray-900"></div>
+                            </div>
+                            <span class="text-xs text-gray-400">AI Assistant</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Player Controls -->
+                    <div class="bg-gray-900 p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-4">
+                                <button id="playPauseBtn" class="text-blue-400 hover:text-blue-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>
+                                
+                                <span id="currentTime" class="text-sm text-blue-300">00:00</span>
+                                <span class="text-sm text-gray-500">/</span>
+                                <span id="duration" class="text-sm text-blue-300">00:00</span>
+
+                                <!-- Playback Speed Control -->
+                                <select id="playbackSpeed" class="px-2 py-1 rounded-md bg-gray-800 text-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                    <option value="0.5">0.5x</option>
+                                    <option value="0.75">0.75x</option>
+                                    <option value="1" selected>1x</option>
+                                    <option value="1.25">1.25x</option>
+                                    <option value="1.5">1.5x</option>
+                                    <option value="2">2x</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center space-x-3">
+                                <button id="addNoteBtn" class="px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium neon-button">
+                                    <span class="flex items-center space-x-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                        <span>Add Note</span>
+                                    </span>
+                                </button>
+                                <button id="citationBtn" class="px-3 py-1 rounded-md bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium neon-button">
+                                    <span class="flex items-center space-x-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                        </svg>
+                                        <span>Citation</span>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Bar with Heatmap -->
+                        <div class="relative">
+                            <div class="h-1 w-full bg-gray-700 rounded-full">
+                                <div id="progressBar" class="h-1 bg-blue-500 rounded-full" style="width: 0%"></div>
+                                <div id="heatmap" class="absolute top-0 left-0 h-full"></div>
+                            </div>
+                            <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.1" class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Neural Citation Engine -->
+                <div class="holographic-border rounded-xl p-4 bg-gray-900 bg-opacity-70">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-purple-400">Neural Citation Engine</h3>
+                        <button id="refreshCitationsBtn" class="text-blue-400 hover:text-blue-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div id="citationResults" class="space-y-3">
+                        <div class="p-3 rounded-lg bg-gray-800 border border-gray-700">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="text-blue-300 font-medium">Quantum Computing Basics</h4>
+                                    <p class="text-sm text-gray-400">Smith, J. et al. (2022)</p>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-blue-900 text-blue-300 rounded-full">DOI: 10.1109/QC.2022.12345</span>
+                            </div>
+                            <div class="mt-2 flex space-x-2">
+                                <span class="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full">Verified Source</span>
+                                <span class="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full">Peer-Reviewed</span>
+                            </div>
+                        </div>
+                        
+                        <div class="p-3 rounded-lg bg-gray-800 border border-gray-700">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="text-blue-300 font-medium">Neural Networks in Education</h4>
+                                    <p class="text-sm text-gray-400">Chen, S. (2023)</p>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-blue-900 text-blue-300 rounded-full">DOI: 10.1016/j.neucom.2023.54321</span>
+                            </div>
+                            <div class="mt-2 flex space-x-2">
+                                <span class="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full">Verified Source</span>
+                                <span class="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full">Open Access</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button id="generateBibBtn" class="w-full py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium neon-button">
+                            Generate Full Bibliography
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- AI Assistant Panel -->
+                <div class="holographic-border rounded-xl p-4 bg-gray-900 bg-opacity-70">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-pink-400">AI Learning Assistant</h3>
+                        <div class="flex items-center space-x-2">
+                            <span id="assistantStatus" class="text-xs px-2 py-1 bg-green-900 text-green-300 rounded-full">Active</span>
+                            <button id="voiceControlBtn" class="text-pink-400 hover:text-pink-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-300">I've detected you're watching content about quantum computing. Would you like me to find related research papers or explain any concepts?</p>
+                                    <div class="mt-2 flex space-x-2">
+                                        <button class="text-xs px-2 py-1 bg-blue-900 text-blue-300 rounded-full hover:bg-blue-800">Explain concepts</button>
+                                        <button class="text-xs px-2 py-1 bg-purple-900 text-purple-300 rounded-full hover:bg-purple-800">Find research</button>
+                                        <button class="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full hover:bg-gray-600">Ask question</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <input id="aiQueryInput" type="text" placeholder="Ask the AI assistant..." class="flex-1 px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <button id="sendQueryBtn" class="px-3 py-2 rounded-md bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium neon-button">
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel - Collaboration & Knowledge Graph -->
+            <div class="space-y-6">
+                <!-- WebRTC Collaboration Panel -->
+                <div class="holographic-border rounded-xl p-4 bg-gray-900 bg-opacity-70">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-pink-400">Live Collaboration</h3>
+                        <div class="flex items-center space-x-2">
+                            <span id="onlineCount" class="text-xs px-2 py-1 bg-green-900 text-green-300 rounded-full">3 Online</span>
+                            <button id="inviteCollaboratorBtn" class="text-pink-400 hover:text-pink-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <!-- User Avatars -->
+                        <div class="flex justify-center space-x-6">
+                            <div class="relative">
+                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center avatar-pulse">
+                                    <span class="text-white font-medium">SC</span>
+                                </div>
+                                <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-gray-900"></div>
+                            </div>
+                            
+                            <div class="relative">
+                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                    <span class="text-white font-medium">MJ</span>
+                                </div>
+                                <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-gray-900"></div>
+                            </div>
+                            
+                            <div class="relative">
+                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                                    <span class="text-white font-medium">TK</span>
+                                </div>
+                                <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-gray-900"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Collaboration Chat -->
+                        <div class="chat-container bg-gray-800 rounded-lg p-3 border border-gray-700">
+                            <div id="chatMessages" class="space-y-2">
+                                <!-- Messages will be dynamically added here -->
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input id="chatInput" type="text" placeholder="Type a message..." class="flex-1 px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <button id="sendChatBtn" class="px-3 py-2 rounded-md bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium neon-button">
+                                Send
+                            </button>
+                        </div>
+                        
+                        <!-- Reaction Markers -->
+                        <div class="flex justify-center space-x-4">
+                            <button class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-blue-400 glow">
+                                <span class="text-xl">👍</span>
+                            </button>
+                            <button class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-pink-400 glow">
+                                <span class="text-xl">❤️</span>
+                            </button>
+                            <button class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-yellow-400 glow">
+                                <span class="text-xl">🤔</span>
+                            </button>
+                            <button class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-purple-400 glow">
+                                <span class="text-xl">🔍</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Holographic Concept Map -->
+                <div class="holographic-border rounded-xl p-4 bg-gray-900 bg-opacity-70">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-cyan-400">Neural Concept Map</h3>
+                        <div class="flex items-center space-x-2">
+                            <span id="fpsCounter" class="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full">60 FPS</span>
+                            <button id="expandConceptMapBtn" class="text-cyan-400 hover:text-cyan-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="conceptMap" class="relative h-64 rounded-lg bg-gray-800 overflow-hidden">
+                        <!-- Three.js will render here -->
+                        <div id="conceptMapLoading" class="absolute inset-0 flex items-center justify-center">
+                            <p class="text-gray-500">Loading neural knowledge graph...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 grid grid-cols-2 gap-2">
+                        <button id="expandConnectionsBtn" class="py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium neon-button">
+                            Expand Connections
+                        </button>
+                        <button id="addConceptBtn" class="py-2 rounded-md bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium neon-button">
+                            Add Concept
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Learning Progress Tracker -->
+                <div class="holographic-border rounded-xl p-4 bg-gray-900 bg-opacity-70">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-blue-400">Learning Progress</h3>
+                        <button id="setGoalBtn" class="text-blue-400 hover:text-blue-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Progress Circle -->
+                        <div class="flex justify-center">
+                            <svg class="progress-circle" width="120" height="120">
+                                <circle class="progress-circle-bg" cx="60" cy="60" r="54"/>
+                                <circle id="progressCircleFill" class="progress-circle-fill" cx="60" cy="60" r="54" stroke-dasharray="339" stroke-dashoffset="169.5"/>
+                            </svg>
+                            <div class="absolute flex flex-col items-center">
+                                <span id="progressPercent" class="text-2xl font-bold text-blue-300">50%</span>
+                                <span class="text-xs text-gray-400">Progress</span>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-sm text-gray-300">Goal: Reach 1000 XP</p>
+                            <p class="text-sm text-gray-400">Current: <span id="currentXP">750</span> XP</p>
+                            <p class="text-sm text-gray-400">Challenges Completed: <span id="challengesCompleted">3</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gamified Learning Battle -->
+                <div class="holographic-border rounded-xl p-4 bg-gray-900 bg-opacity-70">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-purple-400">Learning Battle</h3>
+                        <span class="text-xs px-2 py-1 bg-purple-900 text-purple-300 rounded-full">Live</span>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                                    <span class="text-white text-sm">You</span>
+                                </div>
+                                <span id="userXP" class="font-medium text-blue-300">750 XP</span>
+                            </div>
+                            
+                            <span class="text-gray-400">vs</span>
+                            
+                            <div class="flex items-center space-x-3">
+                                <span id="aiXP" class="font-medium text-pink-300">920 XP</span>
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                                    <span class="text-white text-sm">AI</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                            <h4 class="text-center text-blue-300 font-medium mb-3">Current Challenge</h4>
+                            <p id="challengeText" class="text-sm text-gray-300 mb-3">"Explain quantum entanglement in simple terms within 30 seconds."</p>
+                            
+                            <div class="flex justify-between text-xs text-gray-400">
+                                <span id="timeLeft">Time left: 22s</span>
+                                <span id="challengeDifficulty">Difficulty: ★★★☆☆</span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="answerChallengeBtn" class="py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium neon-button">
+                                Answer Now
+                            </button>
+                            <button id="skipChallengeBtn" class="py-2 rounded-md bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium">
+                                Skip
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 py-2 px-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <button class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-blue-400 glow">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </button>
+            
+            <button class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-purple-400 glow">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+            </button>
+            
+            <button class="p-2 rounded-full bg-blue-600 text-white glow">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+            </button>
+            
+            <button class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-pink-400 glow">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            </button>
+            
+            <button class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-cyan-400 glow">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+            </button>
+        </div>
+    </nav>
+    
+    <!-- Accessibility Elements -->
+    <div class="sr-only" aria-live="polite">
+        Current video time: <span id="ariaCurrentTime">0:00</span>,
+        Cognitive load level: <span id="ariaCognitiveLoad">78%</span>
+    </div>
+    
+    <script>
+        // Initialize Vanta.js background
+        VANTA.NET({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0x3b82f6,
+            backgroundColor: 0x020617,
+            points: 12.00,
+            maxDistance: 22.00,
+            spacing: 18.00
+        });
+        
+        // UI State Management
+        const state = {
+            videoPlaying: false,
+            cognitiveLoad: 78,
+            eyeTrackingActive: false,
+            voiceControlActive: false,
+            conceptMapNodes: 7,
+            currentChallenge: {
+                text: "Explain quantum entanglement in simple terms within 30 seconds.",
+                timeLeft: 22,
+                difficulty: 3,
+                xp: 50
+            },
+            userXP: 750,
+            aiXP: 920,
+            challengesCompleted: 3,
+            learningGoal: 1000,
+            progress: 50
+        };
+        
+        // DOM Elements
+        const elements = {
+            video: null, // Will be set to YouTube player instance
+            playPauseBtn: document.getElementById('playPauseBtn'),
+            currentTime: document.getElementById('currentTime'),
+            duration: document.getElementById('duration'),
+            progressBar: document.getElementById('progressBar'),
+            progressSlider: document.getElementById('progressSlider'),
+            cognitiveLoadBar: document.getElementById('cognitiveLoadBar'),
+            cognitiveLoadText: document.getElementById('cognitiveLoadText'),
+            webcamContainer: document.getElementById('webcamContainer'),
+            eyeTrackingMarker: document.getElementById('eyeTrackingMarker'),
+            conceptMap: document.getElementById('conceptMap'),
+            conceptMapLoading: document.getElementById('conceptMapLoading'),
+            fpsCounter: document.getElementById('fpsCounter'),
+            challengeText: document.getElementById('challengeText'),
+            timeLeft: document.getElementById('timeLeft'),
+            challengeDifficulty: document.getElementById('challengeDifficulty'),
+            userXP: document.getElementById('userXP'),
+            aiXP: document.getElementById('aiXP'),
+            ariaCurrentTime: document.getElementById('ariaCurrentTime'),
+            ariaCognitiveLoad: document.getElementById('ariaCognitiveLoad'),
+            playbackSpeed: document.getElementById('playbackSpeed'),
+            chatMessages: document.getElementById('chatMessages'),
+            chatInput: document.getElementById('chatInput'),
+            progressCircleFill: document.getElementById('progressCircleFill'),
+            progressPercent: document.getElementById('progressPercent'),
+            currentXP: document.getElementById('currentXP'),
+            challengesCompleted: document.getElementById('challengesCompleted')
+        };
+
+        // Theme Toggle
+        function setupThemeToggle() {
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const themeIcon = document.getElementById('themeIcon');
+            const isLightTheme = localStorage.getItem('theme') === 'light';
+
+            if (isLightTheme) {
+                document.body.classList.add('light-theme');
+                themeIcon.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                    </svg>
+                `;
+            }
+
+            themeToggleBtn.addEventListener('click', () => {
+                document.body.classList.toggle('light-theme');
+                const isLight = document.body.classList.contains('light-theme');
+                localStorage.setItem('theme', isLight ? 'light' : 'dark');
+                themeIcon.innerHTML = isLight ? `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                    </svg>
+                ` : `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                `;
+            });
+        }
+
+        // YouTube Video Player Functionality
+        let player;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('neuroVideo', {
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+            elements.video = player;
+        }
+
+        function onPlayerReady(event) {
+            const duration = player.getDuration();
+            const minutes = Math.floor(duration / 60);
+            const seconds = Math.floor(duration % 60);
+            elements.duration.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            elements.playPauseBtn.addEventListener('click', function() {
+                if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+                    player.pauseVideo();
+                    state.videoPlaying = false;
+                    elements.playPauseBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    `;
+                } else {
+                    player.playVideo();
+                    state.videoPlaying = true;
+                    elements.playPauseBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    `;
+                }
+            });
+
+            elements.progressSlider.addEventListener('input', function() {
+                const seekTime = (this.value / 100) * player.getDuration();
+                player.seekTo(seekTime, true);
+            });
+
+            // Playback Speed Control
+            elements.playbackSpeed.addEventListener('change', function() {
+                const speed = parseFloat(this.value);
+                player.setPlaybackRate(speed);
+            });
+
+            setInterval(() => {
+                const currentTime = player.getCurrentTime();
+                const minutes = Math.floor(currentTime / 60);
+                const seconds = Math.floor(currentTime % 60);
+                elements.currentTime.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                elements.ariaCurrentTime.textContent = elements.currentTime.textContent;
+
+                const progress = (currentTime / player.getDuration()) * 100;
+                elements.progressBar.style.width = `${progress}%`;
+                elements.progressSlider.value = progress;
+
+                const randomVariation = Math.random() * 10 - 5;
+                const baseLoad = 70 + (currentTime / player.getDuration()) * 10;
+                state.cognitiveLoad = Math.min(100, Math.max(20, baseLoad + randomVariation));
+                elements.cognitiveLoadBar.style.width = `${state.cognitiveLoad}%`;
+                elements.cognitiveLoadText.textContent = `${Math.round(state.cognitiveLoad)}% Focus`;
+                elements.ariaCognitiveLoad.textContent = elements.cognitiveLoadText.textContent;
+            }, 1000);
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                state.videoPlaying = true;
+                elements.playPauseBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                `;
+            } else if (event.data === YT.PlayerState.PAUSED) {
+                state.videoPlaying = false;
+                elements.playPauseBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                `;
+            }
+        }
+
+        // Initialize Three.js Concept Map with Labels
+        let scene, camera, renderer, nodes = [], labels = [];
+        const concepts = [
+            "Quantum Computing",
+            "Entanglement",
+            "Superposition",
+            "Qubits",
+            "Quantum Gates",
+            "Decoherence",
+            "Algorithms",
+            "Cryptography",
+            "Simulation",
+            "Optimization",
+            "Machine Learning",
+            "Error Correction",
+            "Quantum Supremacy",
+            "Teleportation",
+            "Annealing"
+        ];
+
+        function createLabel(text) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 128;
+            canvas.height = 32;
+            context.font = '16px Rajdhani';
+            context.fillStyle = '#ffffff';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(text, 64, 16);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(0.5, 0.125, 1);
+            return sprite;
+        }
+
+        function initConceptMap() {
+            const container = elements.conceptMap;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a);
+            
+            camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            camera.position.z = 5;
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            container.innerHTML = '';
+            container.appendChild(renderer.domElement);
+            
+            const nodeGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+            const nodeMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x3b82f6,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            // Central node
+            const centralNode = new THREE.Mesh(nodeGeometry, nodeMaterial);
+            centralNode.position.set(0, 0, 0);
+            scene.add(centralNode);
+            nodes.push(centralNode);
+
+            const centralLabel = createLabel(concepts[0]);
+            centralLabel.position.set(0, 0.4, 0);
+            scene.add(centralLabel);
+            labels.push(centralLabel);
+            
+            // Surrounding nodes
+            const nodeCount = Math.min(state.conceptMapNodes - 1, concepts.length - 1);
+            for (let i = 0; i < nodeCount; i++) {
+                const angle = (i / nodeCount) * Math.PI * 2;
+                const radius = 1.5;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                
+                const node = new THREE.Mesh(nodeGeometry, nodeMaterial.clone());
+                node.position.set(x, y, 0);
+                scene.add(node);
+                nodes.push(node);
+                
+                // Add label
+                const label = createLabel(concepts[i + 1]);
+                label.position.set(x, y + 0.3, 0);
+                scene.add(label);
+                labels.push(label);
+                
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, 0, 0),
+                    new THREE.Vector3(x, y, 0)
+                ]);
+                const lineMaterial = new THREE.LineBasicMaterial({ 
+                    color: 0x3b82f6,
+                    transparent: true,
+                    opacity: 0.5
+                });
+                const line = new THREE.Line(lineGeometry, lineMaterial);
+                scene.add(line);
+            }
+            
+            elements.conceptMapLoading.style.display = 'none';
+            animateConceptMap();
+            setupFPSCounter();
+        }
+        
+        function animateConceptMap() {
+            requestAnimationFrame(animateConceptMap);
+            
+            nodes.forEach((node, index) => {
+                if (index > 0) {
+                    const angle = (index / (state.conceptMapNodes - 1)) * Math.PI * 2;
+                    const time = Date.now() * 0.001;
+                    const radius = 1.5 + Math.sin(time + index) * 0.1;
+                    node.position.x = Math.cos(angle + time * 0.1) * radius;
+                    node.position.y = Math.sin(angle + time * 0.1) * radius;
+                    labels[index].position.x = node.position.x;
+                    labels[index].position.y = node.position.y + 0.3;
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+        
+        function setupFPSCounter() {
+            let frameCount = 0;
+            let lastTime = performance.now();
+            
+            const checkFPS = () => {
+                const now = performance.now();
+                const delta = now - lastTime;
+                frameCount++;
+                
+                if (delta >= 500) {
+                    const fps = Math.round((frameCount * 1000) / delta);
+                    elements.fpsCounter.textContent = `${fps} FPS`;
+                    frameCount = 0;
+                    lastTime = now;
+                }
+                
+                requestAnimationFrame(checkFPS);
+            };
+            
+            checkFPS();
+        }
+        
+        // Eye Tracking Simulation
+        async function setupEyeTracking() {
+            try {
+                document.addEventListener('mousemove', (e) => {
+                    if (state.eyeTrackingActive) {
+                        const marker = elements.eyeTrackingMarker;
+                        marker.style.left = `${e.clientX}px`;
+                        marker.style.top = `${e.clientY}px`;
+                        marker.style.display = 'block';
+                        
+                        const videoElement = document.getElementById('neuroVideo');
+                        const videoRect = videoElement.getBoundingClientRect();
+                        const x = (e.clientX - videoRect.left) / videoRect.width;
+                        const y = (e.clientY - videoRect.top) / videoRect.height;
+                        
+                        if (x > 0 && x < 1 && y > 0 && y < 1) {
+                            state.cognitiveLoad = Math.min(100, state.cognitiveLoad + 0.5);
+                        } else {
+                            state.cognitiveLoad = Math.max(20, state.cognitiveLoad - 0.5);
+                        }
+                        
+                        elements.cognitiveLoadBar.style.width = `${state.cognitiveLoad}%`;
+                        elements.cognitiveLoadText.textContent = `${Math.round(state.cognitiveLoad)}% Focus`;
+                    }
+                });
+                
+                elements.webcamContainer.addEventListener('click', () => {
+                    state.eyeTrackingActive = !state.eyeTrackingActive;
+                    elements.eyeTrackingMarker.style.display = state.eyeTrackingActive ? 'block' : 'none';
+                    elements.webcamContainer.style.borderColor = state.eyeTrackingActive ? '#10b981' : '#3b82f6';
+                });
+                
+                console.log('Eye tracking simulation ready');
+            } catch (error) {
+                console.error('Error setting up eye tracking:', error);
+            }
+        }
+        
+        // Citation Engine
+        async function fetchCitations(concept) {
+            try {
+                const mockCitations = [
+                    {
+                        title: "Quantum Computing: A Comprehensive Guide",
+                        authors: ["Smith, J.", "Johnson, A.", "Lee, M."],
+                        doi: "10.1109/QC.2022.12345",
+                        published: "2022/05/15",
+                        type: "journal",
+                        verified: true
+                    },
+                    {
+                        title: "Neural Approaches to Quantum Algorithm Design",
+                        authors: ["Chen, S.", "Wong, T."],
+                        doi: "10.1016/j.neucom.2023.54321",
+                        published: "2023/02/28",
+                        type: "conference",
+                        verified: true
+                    },
+                    {
+                        title: "The Future of Quantum Machine Learning",
+                        authors: ["Brown, R.", "Davis, K.", "Miller, P."],
+                        doi: "10.1038/s41586-023-05672-9",
+                        published: "2023/01/10",
+                        type: "journal",
+                        verified: true
+                    }
+                ];
+                
+                return mockCitations;
+            } catch (error) {
+                console.error('Error fetching citations:', error);
+                return [];
+            }
+        }
+        
+        function displayCitations(citations) {
+            const container = document.getElementById('citationResults');
+            container.innerHTML = '';
+            
+            citations.forEach(citation => {
+                const citationElement = document.createElement('div');
+                citationElement.className = 'p-3 rounded-lg bg-gray-800 border border-gray-700 mb-3';
+                
+                citationElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="text-blue-300 font-medium">${citation.title}</h4>
+                            <p class="text-sm text-gray-400">${citation.authors.join(', ')} (${citation.published.split('/')[0]})</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 bg-blue-900 text-blue-300 rounded-full">DOI: ${citation.doi}</span>
+                    </div>
+                    <div class="mt-2 flex space-x-2">
+                        <span class="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full">${citation.type === 'journal' ? 'Journal Article' : 'Conference Paper'}</span>
+                        <span class="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full">${citation.verified ? 'Verified Source' : 'Unverified'}</span>
+                    </div>
+                `;
+                
+                container.appendChild(citationElement);
+            });
+        }
+        
+        // Collaboration Chat
+        function setupCollaboration() {
+            document.getElementById('inviteCollaboratorBtn').addEventListener('click', () => {
+                alert('In a real implementation, this would open a dialog to invite collaborators via WebRTC');
+            });
+
+            document.getElementById('sendChatBtn').addEventListener('click', sendChatMessage);
+            elements.chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendChatMessage();
+            });
+
+            function sendChatMessage() {
+                const message = elements.chatInput.value.trim();
+                if (message) {
+                    addChatMessage('SC', message);
+                    elements.chatInput.value = '';
+                    // Simulate a reply after 2 seconds
+                    setTimeout(() => {
+                        const replies = ['Interesting point!', 'I agree, let’s explore that further.', 'Can you elaborate on that?', 'Great idea!'];
+                        addChatMessage('MJ', replies[Math.floor(Math.random() * replies.length)]);
+                    }, 2000);
+                }
+            }
+
+            function addChatMessage(user, message) {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'flex items-start space-x-2';
+                messageElement.innerHTML = `
+                    <div class="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                        <span class="text-xs text-white">${user}</span>
+                    </div>
+                    <div>
+                        <span class="text-sm text-blue-300">${user} at ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <p class="text-sm text-gray-300">${message}</p>
+                    </div>
+                `;
+                elements.chatMessages.appendChild(messageElement);
+                elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+            }
+
+            // Add initial message
+            addChatMessage('TK', 'Hey everyone, let’s discuss the quantum computing concepts from the video!');
+        }
+        
+        // Learning Battle Game
+        function setupLearningBattle() {
+            const challenges = [
+                {
+                    text: "Explain quantum entanglement in simple terms within 30 seconds.",
+                    difficulty: 3,
+                    time: 600,
+                    xp: 50
+                },
+                {
+                    text: "Describe the difference between a qubit and a classical bit in 20 seconds.",
+                    difficulty: 2,
+                    time: 500,
+                    xp: 30
+                },
+                {
+                    text: "Name three practical applications of quantum computing within 45 seconds.",
+                    difficulty: 4,
+                    time: 450,
+                    xp: 70
+                }
+            ];
+            
+            document.getElementById('answerChallengeBtn').addEventListener('click', () => {
+                const challenge = state.currentChallenge;
+                const xpEarned = Math.floor(challenge.xp * (1 + Math.random() * 0.5));
+                state.userXP += xpEarned;
+                state.challengesCompleted += 1;
+                elements.userXP.textContent = `${state.userXP} XP`;
+                elements.challengesCompleted.textContent = state.challengesCompleted;
+
+                // Update AI XP
+                const aiXPEarned = Math.floor(challenge.xp * (0.8 + Math.random() * 0.4));
+                state.aiXP += aiXPEarned;
+                elements.aiXP.textContent = `${state.aiXP} XP`;
+
+                // Update progress toward goal
+                const progress = (state.userXP / state.learningGoal) * 100;
+                state.progress = Math.min(100, progress);
+                elements.progressPercent.textContent = `${Math.round(state.progress)}%`;
+                elements.currentXP.textContent = state.userXP;
+                const circumference = 339; // 2 * π * radius (radius = 54)
+                const offset = circumference - (state.progress / 100) * circumference;
+                elements.progressCircleFill.setAttribute('stroke-dashoffset', offset);
+
+                // Display result
+                alert(`You earned ${xpEarned} XP! AI earned ${aiXPEarned} XP.`);
+                loadNewChallenge();
+            });
+
+            document.getElementById('skipChallengeBtn').addEventListener('click', () => {
+                loadNewChallenge();
+            });
+
+            function loadNewChallenge() {
+                const newChallenge = challenges[Math.floor(Math.random() * challenges.length)];
+                state.currentChallenge = {
+                    text: newChallenge.text,
+                    timeLeft: newChallenge.time,
+                    difficulty: newChallenge.difficulty,
+                    xp: newChallenge.xp
+                };
+                elements.challengeText.textContent = `"${state.currentChallenge.text}"`;
+                elements.timeLeft.textContent = `Time left: ${state.currentChallenge.timeLeft}s`;
+                elements.challengeDifficulty.textContent = `Difficulty: ${'★'.repeat(state.currentChallenge.difficulty)}${'☆'.repeat(5 - state.currentChallenge.difficulty)}`;
+
+                // Reset timer
+                let timeLeft = state.currentChallenge.timeLeft;
+                const timer = setInterval(() => {
+                    timeLeft--;
+                    state.currentChallenge.timeLeft = timeLeft;
+                    elements.timeLeft.textContent = `Time left: ${timeLeft}s`;
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        alert('Time’s up! Challenge skipped.');
+                        loadNewChallenge();
+                    }
+                }, 1000);
+            }
+
+            // Initialize first challenge
+            loadNewChallenge();
+        }
+
+        // Initialize all components
+        setupThemeToggle();
+        setupEyeTracking();
+        initConceptMap();
+        fetchCitations('quantum computing').then(displayCitations);
+        setupCollaboration();
+        setupLearningBattle();
+
+        // Additional UI Interactions
+        document.getElementById('userMenuBtn').addEventListener('click', () => {
+            document.getElementById('userMenu').classList.toggle('hidden');
+        });
+
+        document.getElementById('addNoteBtn').addEventListener('click', () => {
+            const time = elements.currentTime.textContent;
+            alert(`Note added at ${time}: "User added a note here."`);
+        });
+
+        document.getElementById('citationBtn').addEventListener('click', () => {
+            fetchCitations('quantum computing').then(displayCitations);
+        });
+
+        document.getElementById('generateBibBtn').addEventListener('click', () => {
+            alert('In a real implementation, this would generate a bibliography in APA/MLA format.');
+        });
+
+        document.getElementById('voiceControlBtn').addEventListener('click', () => {
+            state.voiceControlActive = !state.voiceControlActive;
+            document.getElementById('assistantStatus').textContent = state.voiceControlActive ? 'Voice Active' : 'Active';
+            document.getElementById('assistantStatus').className = `text-xs px-2 py-1 ${state.voiceControlActive ? 'bg-blue-900 text-blue-300' : 'bg-green-900 text-green-300'} rounded-full`;
+            if (state.voiceControlActive) {
+                alert('Voice control activated. Say "pause video" or "explain concept".');
+            }
+        });
+
+        document.getElementById('sendQueryBtn').addEventListener('click', () => {
+            const query = document.getElementById('aiQueryInput').value;
+            if (query) {
+                alert(`AI Assistant: I understood your query as "${query}". In a real implementation, I would process this with NLP and respond accordingly.`);
+                document.getElementById('aiQueryInput').value = '';
+            }
+        });
+
+        document.getElementById('expandConnectionsBtn').addEventListener('click', () => {
+            state.conceptMapNodes = Math.min(concepts.length, state.conceptMapNodes + 2);
+            initConceptMap();
+        });
+
+        document.getElementById('addConceptBtn').addEventListener('click', () => {
+            alert('In a real implementation, this would prompt the user to add a new concept node.');
+        });
+
+        document.getElementById('setGoalBtn').addEventListener('click', () => {
+            const newGoal = prompt('Enter your new XP goal:', state.learningGoal);
+            if (newGoal && !isNaN(newGoal)) {
+                state.learningGoal = parseInt(newGoal);
+                const progress = (state.userXP / state.learningGoal) * 100;
+                state.progress = Math.min(100, progress);
+                elements.progressPercent.textContent = `${Math.round(state.progress)}%`;
+                const circumference = 339;
+                const offset = circumference - (state.progress / 100) * circumference;
+                elements.progressCircleFill.setAttribute('stroke-dashoffset', offset);
+            }
+        });
+    </script>
+</body>
+</html>
